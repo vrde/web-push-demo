@@ -25,8 +25,7 @@ const saveSubscription = async (subscription) => {
   return response.json();
 };
 
-self.addEventListener("install", async () => {
-  // This will be called only once when the service worker is installed for first time.
+self.addEventListener("activate", async () => {
   try {
     const applicationServerKey = urlB64ToUint8Array(
       "BKNMV1-vx2x5t3KutZzBJnZDl5Z_2UIxhi1UfdAw8HLg2f9mJAepjlRfoCN40lqCIFcrTrOBqEsO-GJSZA7q91Q"
@@ -52,7 +51,6 @@ self.addEventListener("push", function (event) {
 const showLocalNotification = (title, body, swRegistration) => {
   const options = {
     body,
-    // here you can add more properties like icon, image, vibrate, etc.
   };
   swRegistration.showNotification(title, options);
 };

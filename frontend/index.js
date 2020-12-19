@@ -28,4 +28,3 @@ const main = async () => {
   const permission = await requestNotificationPermission();
   const swRegistration = await registerServiceWorker();
 };
-// main(); we will not call main in the beginning.
