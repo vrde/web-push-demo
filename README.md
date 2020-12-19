@@ -1,21 +1,12 @@
-# Demo for the Web Push blog
+# Web push notification demo
 
-This is the working demo code for the blog post here:
+This is a fork and refactor of [a7ul's demo](https://github.com/a7ul/web-push-demo) that should make the setup and deployment easier.
 
-[https://blog.atulr.com/web-notifications](https://blog.atulr.com/web-notifications)
+To launch the demo:
 
-To launch backend:
-
-```sh
-cd backend
-npm install
-node index.js
 ```
-
-To launch frontend:
-
-```sh
-cd frontend
-npm install -g http-server
-http-server
+cd src
+npm install
+node generate-vapid-keys.js
+node index.js
 ```
