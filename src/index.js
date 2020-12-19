@@ -7,14 +7,10 @@ const webpush = require("web-push");
 /**
  * Push notifications
  */
-const vapidKeys = {
-  publicKey:
-    "BKNMV1-vx2x5t3KutZzBJnZDl5Z_2UIxhi1UfdAw8HLg2f9mJAepjlRfoCN40lqCIFcrTrOBqEsO-GJSZA7q91Q",
-  privateKey: "Fc8pn1fM_1dBw7dqpAHGrEUIHooXpT-6JEbPwOY1ZpE",
-};
+const vapidKeys = require("./vapid-keys.json");
 
 webpush.setVapidDetails(
-  "mailto:agranzot@gmail.com",
+  "mailto:" + vapidKeys.email,
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
@@ -22,7 +18,16 @@ webpush.setVapidDetails(
 async function sendNotifications(subscriptions, dataToSend) {
   for (let subscription of subscriptions) {
     console.log("Send notification", subscription);
-    await webpush.sendNotification(subscription, dataToSend);
+    try {
+      await webpush.sendNotification(subscription, dataToSend);
+    } catch (e) {
+      if (e.statusCode === 410) {
+        console.log("Subscription no longer valid");
+        deleteSubscription(subscription);
+      } else {
+        console.log(e);
+      }
+    }
   }
 }
 
@@ -42,6 +47,14 @@ function insertSubscription(subscription) {
   writeFileSync(dbFilename, JSON.stringify(db));
 }
 
+function deleteSubscription(subscription) {
+  const db = JSON.parse(readFileSync(dbFilename));
+  db.subscriptions = db.subscriptions.filter(
+    (s) => s.endpoint !== subscription.endpoint
+  );
+  writeFileSync(dbFilename, JSON.stringify(db));
+}
+
 function getAllSubscriptions() {
   const db = JSON.parse(readFileSync(dbFilename));
   return db.subscriptions;
@@ -51,22 +64,24 @@ function getAllSubscriptions() {
  * API endpoints
  */
 const app = express();
+const port = 4000;
+
+app.use(express.static("public"));
 app.use(cors());
 app.use(bodyParser.json());
 
-const port = 4000;
+app.get("/api/vapid-key", (req, res) => {
+  return res.send(vapidKeys.publicKey);
+});
 
-app.get("/", (req, res) => res.send("Hello World!"));
-
-app.post("/save-subscription", async (req, res) => {
+app.post("/api/save-subscription", async (req, res) => {
   const subscription = req.body;
   console.log("Save new subscription", subscription);
   await insertSubscription(subscription);
   res.json({ message: "success" });
 });
 
-app.get("/send-notification", (req, res) => {
-  const subscription = dummyDb.subscription;
+app.get("/api/send-notification", (req, res) => {
   const message = "Hello World";
   const subscriptions = getAllSubscriptions();
   sendNotifications(subscriptions, message);
